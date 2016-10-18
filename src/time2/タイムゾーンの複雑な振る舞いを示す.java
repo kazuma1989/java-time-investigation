@@ -1,3 +1,4 @@
+
 package time2;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -17,31 +18,46 @@ import org.junit.Test;
 public class タイムゾーンの複雑な振る舞いを示す {
 
     private LocalDate localDate;
+
     private LocalTime localTime;
+
     private ZoneOffset zoneOffset;
+
     private ZoneId zoneId;
-    private LocalDateTime inGap;
-    private LocalDateTime inOverlap;
+
+    private LocalDateTime localInGap;
+
+    private LocalDateTime localInOverlap;
 
     @Before
     public void 独立した時間オブジェクトを用意する() {
-        this.inGap = LocalDateTime.of(2016, 3, 27, 2, 15);
-        this.inOverlap = LocalDateTime.of(2016, 10, 30, 2, 15);
+        this.localInGap = LocalDateTime.of(2016, 3, 27, 2, 15);
+        this.localInOverlap = LocalDateTime.of(2016, 10, 30, 2, 15);
         this.zoneId = ZoneId.of("Europe/Paris");
     }
 
     @Test
     public void getOffsetを試す() {
-        ZoneOffset standardOffset = this.zoneId.getRules().getOffset(this.inGap);
-        ZoneOffset dstOffset = this.zoneId.getRules().getOffset(this.inOverlap);
+        ZoneOffset standardOffset = this.zoneId.getRules().getOffset(this.localInGap);
+        ZoneOffset dstOffset = this.zoneId.getRules().getOffset(this.localInOverlap);
 
         assertThat(standardOffset, is(ZoneOffset.of("+01:00")));
         assertThat(dstOffset, is(ZoneOffset.of("+02:00")));
     }
 
     @Test
-    public void ZonedDateTimeへ変換した場合はどうか？() {
-        ZonedDateTime zonedDateTime = ZonedDateTime.of(this.inGap, this.zoneId);
+    public void ZonedDateTimeへ変換した場合はどうか() {
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(this.localInGap, this.zoneId);
+        ZoneOffset dstOffset = zonedDateTime.getOffset();
+
+        assertThat(dstOffset, is(ZoneOffset.of("+02:00")));
+    }
+
+    @Test
+    public void ZonedDateTimeへ変換するプロセスを詳細に見ていく() {
+        ZoneOffset standardOffset = this.zoneId.getRules().getOffset(this.localInGap);
+        OffsetDateTime offsetDateTime = OffsetDateTime.of(this.localInGap, standardOffset);
+        ZonedDateTime zonedDateTime = offsetDateTime.atZoneSameInstant(this.zoneId);
         ZoneOffset dstOffset = zonedDateTime.getOffset();
 
         assertThat(dstOffset, is(ZoneOffset.of("+02:00")));
